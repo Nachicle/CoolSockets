@@ -50,6 +50,21 @@ static int __cs_GetProtocol(CSType type) {
     return result;
 }
 
+// Private Windows Socket API start function
+static CSReturnCode __cs_WSAStartup(void) {
+    static int wsaInit = FALSE;
+    if(!wsaInit) {
+        WSADATA wsaData = {0};
+        int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if(wsaResult != 0) {
+            __cs_LogError(wsaResult);
+            return CS_RETURN_ERROR;
+        } 
+        wsaInit = TRUE;
+    }
+    return CS_RETURN_OK;
+}
+
 // Library version function
 void cs_Version(void) {
     printf("Hi, I'm CoolSockets (%s) for Windows!\n", COOL_SOCKETS_VERSION);
@@ -65,15 +80,8 @@ CSReturnCode cs_ServerStart(CoolSocket* server, char* address, int port, CSFamil
     server->type = type;
 
     // Starting Windows Sockets API
-    static int wsaInit = FALSE;
-    if(!wsaInit) {
-        WSADATA wsaData = {0};
-        int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if(wsaResult != 0) {
-            __cs_LogError(wsaResult);
-            return CS_RETURN_ERROR;
-        } 
-        wsaInit = TRUE;
+    if(!__cs_WSAStartup()) {
+        return CS_RETURN_ERROR;
     }
     
     // Getting address
@@ -186,24 +194,72 @@ CSReturnCode cs_ServerStop(CoolSocket server) {
     return CS_RETURN_OK;
 }
 
-// Data transfer functions
-int cs_Write(CoolSocket receiver, char* buffer, int toWrite) {
-    return send(receiver.socket, buffer, toWrite, 0);
+// Client specific functions
+CSReturnCode cs_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type) {
+    
+    // Filling client data
+    client->family = family;
+    client->type = type;
+
+    // Starting Windows Sockets API
+    if(!__cs_WSAStartup()) {
+        return CS_RETURN_ERROR;
+    }
+
+    // Getting address
+    struct addrinfo *result = NULL, hints;
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = __cs_GetFamily(client->family);
+    hints.ai_socktype = __cs_GetType(client->type);
+    hints.ai_protocol = __cs_GetProtocol(client->type);
+
+    char portString[16];
+    sprintf_s(portString, sizeof(portString), "%d", port);
+
+    int addrInfoResult = getaddrinfo(address, portString, &hints, &result);
+    if (addrInfoResult != 0) {
+        __cs_LogError(addrInfoResult);
+        WSACleanup();
+        return CS_RETURN_ERROR;
+    }
+
+    // Creating socket
+    client->socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (client->socket == INVALID_SOCKET) {
+        __cs_LogError(WSAGetLastError());
+        freeaddrinfo(result);
+        WSACleanup();
+        return CS_RETURN_ERROR;
+    } 
+
+    // Connecting to server
+    int connectionResult = connect(client->socket, result->ai_addr, result->ai_addrlen);
+    if(connectionResult == SOCKET_ERROR) {
+        closesocket(client->socket);
+
+    }
+
+    return CS_RETURN_OK;
 }
-CSReturnCode cs_WriteAll(CoolSocket receiver, char* buffer, int toWrite) {
+
+// Data transfer functions
+int cs_Write(CoolSocket socket, char* buffer, int toWrite) {
+    return send(socket.socket, buffer, toWrite, 0);
+}
+CSReturnCode cs_WriteAll(CoolSocket socket, char* buffer, int toWrite) {
     int written = 0;
     do {
-        written += cs_Write(receiver, buffer+written, toWrite-written);
+        written += cs_Write(socket, buffer+written, toWrite-written);
     } while(written<toWrite);
     return CS_RETURN_OK;
 }
-int cs_Read(CoolSocket sender, char* buffer, int bufferSize) {
-    return recv(sender.socket, buffer, bufferSize, 0);
+int cs_Read(CoolSocket socket, char* buffer, int bufferSize) {
+    return recv(socket.socket, buffer, bufferSize, 0);
 }
-CSReturnCode cs_ReadAll(CoolSocket sender, char* buffer, int toRead) {
+CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int toRead) {
     int read = 0;
     do {
-        read += cs_Read(sender, buffer+read, toRead-read);
+        read += cs_Read(socket, buffer+read, toRead-read);
     } while(read<toRead);
     return CS_RETURN_OK;
 }

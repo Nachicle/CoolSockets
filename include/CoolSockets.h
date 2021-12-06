@@ -35,6 +35,9 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client);
 CSReturnCode cs_ServerDisconnectClient(CoolSocket client);
 CSReturnCode cs_ServerStop(CoolSocket server);
 
+// Client specific functions
+CSReturnCode cs_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type);
+
 // Data transfer functions
 int cs_Write(CoolSocket receiver, char* buffer, int toWrite);
 CSReturnCode cs_WriteAll(CoolSocket receiver, char* buffer, int toWrite);
