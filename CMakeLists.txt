@@ -6,17 +6,25 @@ project(CoolSockets VERSION 0.1.0)
 include_directories(include/)
 
 if(UNIX) 
-    message(STATUS "Using Linux sources")
+    message(STATUS "### COOLSOCKETS: USING LINUX SOURCES ###")
     set(SOURCE 
         source/linux/CoolSockets.c
     )
 endif()
 
 if(WIN32)
-    message(STATUS "Using Windows sources")
+    message(STATUS "### COOLSOCKETS: USING WINDOWS SOURCES ###")
     set(SOURCE 
         source/windows/CoolSockets.c
     )
 endif()
 
 add_executable(test Main.c ${SOURCE})
+
+if(UNIX)
+
+endif()
+
+if(WIN32)
+    target_link_libraries(test wsock32 ws2_32)
+endif()
