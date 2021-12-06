@@ -19,12 +19,14 @@ if(WIN32)
     )
 endif()
 
-add_executable(test Main.c ${SOURCE})
+add_executable(server examples/Server.c ${SOURCE})
+add_executable(client examples/Client.c ${SOURCE})
 
 if(UNIX)
 
 endif()
 
 if(WIN32)
-    target_link_libraries(test wsock32 ws2_32)
+    target_link_libraries(server wsock32 ws2_32)
+    target_link_libraries(client wsock32 ws2_32)
 endif()
