@@ -31,8 +31,9 @@ void cs_Version(void);
 // Server specific functions
 CSReturnCode cs_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type);
 CSReturnCode cs_ServerListen(CoolSocket server, int queueSize);
-CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) ;
-// CSReturnCode cs_CloseServer(CoolSocket server);
+CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client);
+CSReturnCode cs_ServerDisconnectClient(CoolSocket client);
+CSReturnCode cs_ServerStop(CoolSocket server);
 
 // Data transfer functions
 int cs_Write(CoolSocket receiver, char* buffer, int toWrite);

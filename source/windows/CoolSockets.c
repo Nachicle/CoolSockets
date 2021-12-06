@@ -164,6 +164,27 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
 
     return CS_RETURN_OK;
 }
+CSReturnCode cs_ServerDisconnectClient(CoolSocket client) {
+    int disconnectionResult = shutdown(client.socket, SD_SEND);
+    if(disconnectionResult == SOCKET_ERROR) {
+        __cs_LogError(WSAGetLastError());
+        return CS_RETURN_ERROR;
+    }    
+    int closeResult = closesocket(client.socket);
+    if(!closeResult) {
+        __cs_LogError(closeResult);
+        return CS_RETURN_ERROR;
+    }
+    return CS_RETURN_OK;
+}
+CSReturnCode cs_ServerStop(CoolSocket server) {
+    int closeResult = closesocket(server.socket);
+    if(!closeResult) {
+        __cs_LogError(closeResult);
+        return CS_RETURN_ERROR;
+    }
+    return CS_RETURN_OK;
+}
 
 // Data transfer functions
 int cs_Write(CoolSocket receiver, char* buffer, int toWrite) {
