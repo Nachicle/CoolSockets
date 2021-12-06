@@ -140,7 +140,6 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
     }
 
     void* clientAddr = malloc(clientAddrLen);
-    printf("Accepting %lld\n", server.socket);
     client->socket = accept(server.socket, clientAddr, &clientAddrLen);
 
     if (client->socket == INVALID_SOCKET) {
@@ -167,15 +166,23 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
 }
 
 // Data transfer functions
-void cs_Write(void);
-void cs_WriteAll(void);
-int cs_Read(CoolSocket client, char* buffer, int bufferSize) {
-    return recv(client.socket, buffer, bufferSize, 0);
+int cs_Write(CoolSocket receiver, char* buffer, int toWrite) {
+    return send(receiver.socket, buffer, toWrite, 0);
 }
-CSReturnCode cs_ReadAll(CoolSocket client, char* buffer, int toRead) {
+CSReturnCode cs_WriteAll(CoolSocket receiver, char* buffer, int toWrite) {
+    int written = 0;
+    do {
+        written += cs_Write(receiver, buffer+written, toWrite-written);
+    } while(written<toWrite);
+    return CS_RETURN_OK;
+}
+int cs_Read(CoolSocket sender, char* buffer, int bufferSize) {
+    return recv(sender.socket, buffer, bufferSize, 0);
+}
+CSReturnCode cs_ReadAll(CoolSocket sender, char* buffer, int toRead) {
     int read = 0;
     do {
-        read += cs_Read(client, buffer+read, toRead-read);
+        read += cs_Read(sender, buffer+read, toRead-read);
     } while(read<toRead);
     return CS_RETURN_OK;
 }
