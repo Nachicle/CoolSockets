@@ -165,3 +165,17 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
 
     return CS_RETURN_OK;
 }
+
+// Data transfer functions
+void cs_Write(void);
+void cs_WriteAll(void);
+int cs_Read(CoolSocket client, char* buffer, int bufferSize) {
+    return recv(client.socket, buffer, bufferSize, 0);
+}
+CSReturnCode cs_ReadAll(CoolSocket client, char* buffer, int toRead) {
+    int read = 0;
+    do {
+        read += cs_Read(client, buffer+read, toRead-read);
+    } while(read<toRead);
+    return CS_RETURN_OK;
+}

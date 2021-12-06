@@ -1,7 +1,9 @@
+#include <stdio.h>
+
 #include <CoolSockets.h>
 
 int main(int argc, char const *argv[]) {
-    
+
     cs_Version();
     CoolSocket server;    
 
@@ -12,6 +14,13 @@ int main(int argc, char const *argv[]) {
         CoolSocket client;
         cs_ServerAccept(server, &client);
         printf("\nSocket: %lld\nAddress: %s\nPort: %d\nFamily: %d\nType: %d\n", client.socket, client.address, client.port, client.family, client.type);
+
+        char buffer[1024];
+        while(1) {
+            cs_Read(client, buffer, 1024);
+            printf(buffer);
+        }
+
     } else {
         printf("Couldn't open server D=\n");
     }
