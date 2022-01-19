@@ -26,20 +26,20 @@ typedef struct {
 } CoolSocket;
 
 // Library version function
-void cs_Version(void);
+void CS_Version(void);
 
 // Server specific functions
-CSReturnCode cs_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type);
-CSReturnCode cs_ServerListen(CoolSocket server, int queueSize);
-CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client);
-CSReturnCode cs_ServerDisconnectClient(CoolSocket client);
-CSReturnCode cs_ServerStop(CoolSocket server);
+CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type);
+CSReturnCode CS_ServerListen(CoolSocket server, int queueSize);
+CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client);
+CSReturnCode CS_ServerDisconnectClient(CoolSocket client);
+CSReturnCode CS_ServerStop(CoolSocket server);
 
 // Client specific functions
-CSReturnCode cs_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type);
+CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type);
 
 // Data transfer functions
-int cs_Write(CoolSocket receiver, char* buffer, int toWrite);
-CSReturnCode cs_WriteAll(CoolSocket receiver, char* buffer, int toWrite);
-int cs_Read(CoolSocket sender, char* buffer, int bufferSize);
-CSReturnCode cs_ReadAll(CoolSocket sender, char* buffer, int toRead);
+int CS_Send(CoolSocket socket, char* buffer, int nbytes);
+CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes);
+int CS_Receive(CoolSocket socket, char* buffer, int nbytes);
+CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
