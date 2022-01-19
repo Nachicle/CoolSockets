@@ -73,6 +73,9 @@ void CS_Version(void) {
 // Server specific functions
 CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type) {
     
+    // Initializing socket data
+    memset(server, 0, sizeof(CoolSocket));
+
     // Filling server data
     strcpy_s(server->address, sizeof(server->address), address);
     server->port = port;
@@ -134,6 +137,10 @@ CSReturnCode CS_ServerListen(CoolSocket server, int queueSize) {
     return CS_RETURN_OK;
 }
 CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client) {
+
+    // Initializing socket data
+    memset(client, 0, sizeof(CoolSocket));
+
     client->family = server.family;
     client->type = server.type;
 
@@ -197,6 +204,9 @@ CSReturnCode CS_ServerStop(CoolSocket server) {
 // Client specific functions
 CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type) {
     
+    // Initializing socket data
+    memset(client, 0, sizeof(CoolSocket));
+
     // Filling client data
     client->family = family;
     client->type = type;
