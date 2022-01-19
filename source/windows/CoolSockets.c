@@ -66,12 +66,12 @@ static CSReturnCode __cs_WSAStartup(void) {
 }
 
 // Library version function
-void cs_Version(void) {
+void CS_Version(void) {
     printf("Hi, I'm CoolSockets (%s) for Windows!\n", COOL_SOCKETS_VERSION);
 }
 
 // Server specific functions
-CSReturnCode cs_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type) {
+CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type) {
     
     // Filling server data
     strcpy_s(server->address, sizeof(server->address), address);
@@ -124,7 +124,7 @@ CSReturnCode cs_ServerStart(CoolSocket* server, char* address, int port, CSFamil
     
     return CS_RETURN_OK;
 }
-CSReturnCode cs_ServerListen(CoolSocket server, int queueSize) {
+CSReturnCode CS_ServerListen(CoolSocket server, int queueSize) {
     if(listen(server.socket, queueSize) == SOCKET_ERROR) {
         __cs_LogError(WSAGetLastError());
         closesocket(server.socket);
@@ -133,7 +133,7 @@ CSReturnCode cs_ServerListen(CoolSocket server, int queueSize) {
     }
     return CS_RETURN_OK;
 }
-CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
+CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client) {
     client->family = server.family;
     client->type = server.type;
 
@@ -172,7 +172,7 @@ CSReturnCode cs_ServerAccept(CoolSocket server, CoolSocket* client) {
 
     return CS_RETURN_OK;
 }
-CSReturnCode cs_ServerDisconnectClient(CoolSocket client) {
+CSReturnCode CS_ServerDisconnectClient(CoolSocket client) {
     int disconnectionResult = shutdown(client.socket, SD_SEND);
     if(disconnectionResult == SOCKET_ERROR) {
         __cs_LogError(WSAGetLastError());
@@ -185,7 +185,7 @@ CSReturnCode cs_ServerDisconnectClient(CoolSocket client) {
     }
     return CS_RETURN_OK;
 }
-CSReturnCode cs_ServerStop(CoolSocket server) {
+CSReturnCode CS_ServerStop(CoolSocket server) {
     int closeResult = closesocket(server.socket);
     if(!closeResult) {
         __cs_LogError(closeResult);
@@ -195,7 +195,7 @@ CSReturnCode cs_ServerStop(CoolSocket server) {
 }
 
 // Client specific functions
-CSReturnCode cs_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type) {
+CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type) {
     
     // Filling client data
     client->family = family;

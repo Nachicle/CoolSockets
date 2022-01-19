@@ -3,6 +3,6 @@
 #include <stdio.h>
 
 // Library version function
-void cs_Version(void) {
+void CS_Version(void) {
     printf("Hi, I'm CoolSockets (%s) for Linux!\n", COOL_SOCKETS_VERSION);
 }
