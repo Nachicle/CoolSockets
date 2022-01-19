@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
-void cs_greet(void) {
-    printf("Hi, I'm CoolSockets for Linux!\n");
+// Library version function
+void cs_Version(void) {
+    printf("Hi, I'm CoolSockets (%s) for Linux!\n", COOL_SOCKETS_VERSION);
 }
