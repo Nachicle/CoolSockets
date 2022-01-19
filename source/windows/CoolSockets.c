@@ -243,23 +243,23 @@ CSReturnCode cs_ClientConnect(CoolSocket* client, char* address, int port, CSFam
 }
 
 // Data transfer functions
-int cs_Write(CoolSocket socket, char* buffer, int toWrite) {
-    return send(socket.socket, buffer, toWrite, 0);
+int CS_Send(CoolSocket socket, char* buffer, int nbytes) {
+    return send(socket.socket, buffer, nbytes, 0);
 }
-CSReturnCode cs_WriteAll(CoolSocket socket, char* buffer, int toWrite) {
+CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes) {
     int written = 0;
     do {
-        written += cs_Write(socket, buffer+written, toWrite-written);
-    } while(written<toWrite);
+        written += CS_Send(socket, buffer+written, nbytes-written);
+    } while(written<nbytes);
     return CS_RETURN_OK;
 }
-int cs_Read(CoolSocket socket, char* buffer, int bufferSize) {
-    return recv(socket.socket, buffer, bufferSize, 0);
+int CS_Receive(CoolSocket socket, char* buffer, int nbytes) {
+    return recv(socket.socket, buffer, nbytes, 0);
 }
-CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int toRead) {
+CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes) {
     int read = 0;
     do {
-        read += cs_Read(socket, buffer+read, toRead-read);
-    } while(read<toRead);
+        read += CS_Receive(socket, buffer+read, nbytes-read);
+    } while(read<nbytes);
     return CS_RETURN_OK;
 }

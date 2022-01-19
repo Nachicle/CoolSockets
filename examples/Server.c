@@ -22,10 +22,10 @@ int main(int argc, char const *argv[])
             while(1) {
                 printf("Waiting for message...\n");
                 char buffer[1024];
-                int bytes = cs_Read(client, buffer, sizeof(buffer));
+                int bytes = CS_Receive(client, buffer, sizeof(buffer));
                 printf("Message received! Making it a bit louder and bringing it back...\n");
                 toUpperCase(buffer);
-                cs_Write(client, buffer, strlen(buffer)+1);
+                CS_Send(client, buffer, strlen(buffer)+1);
             }
         }
     } else {
