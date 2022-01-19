@@ -17,12 +17,19 @@ typedef enum {
     CS_RETURN_ERROR = 0
 } CSReturnCode;
 
+typedef CSReturnCode (*CSCallback)(CoolSocket);
+
 typedef struct {
+    // Socket info
     long long socket;
     char address[128];
     unsigned port;
     CSFamily family;
     CSType type;
+    // Callback functions
+    CSCallback connectionCallback;
+    CSCallback disconnectionCallback;
+    CSCallback dataReadyCallback;
 } CoolSocket;
 
 // Library version function
@@ -43,3 +50,9 @@ int CS_Send(CoolSocket socket, char* buffer, int nbytes);
 CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes);
 int CS_Receive(CoolSocket socket, char* buffer, int nbytes);
 CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
+
+// Callback managing functions
+void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);
+void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback);
+void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback);
+void CS_ProcessEvents(CoolSocket socket);
