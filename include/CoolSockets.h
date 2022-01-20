@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define COOL_SOCKETS_VERSION "0.0.1"
 
 typedef enum {
@@ -43,3 +47,7 @@ int CS_Send(CoolSocket socket, char* buffer, int nbytes);
 CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes);
 int CS_Receive(CoolSocket socket, char* buffer, int nbytes);
 CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
+
+#ifdef __cplusplus
+}
+#endif
