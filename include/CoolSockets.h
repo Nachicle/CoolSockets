@@ -55,4 +55,5 @@ CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
 void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);
 void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback);
 void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback);
-void CS_ProcessEvents(CoolSocket socket);
+void CS_ProcessSocketEvents(CoolSocket socket);
+void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize);

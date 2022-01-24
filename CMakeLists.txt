@@ -25,6 +25,7 @@ set(SOURCES
 )
 
 add_executable(Server examples/Server.c ${SOURCES})
+add_executable(ServerCallbacks examples/ServerCallbacks.c ${SOURCES})
 add_executable(Client examples/Client.c ${SOURCES})
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
@@ -34,6 +35,7 @@ endif()
 
 if(WIN32)
     target_link_libraries(Server wsock32 ws2_32)
+    target_link_libraries(ServerCallbacks wsock32 ws2_32)
     target_link_libraries(Client wsock32 ws2_32)
     target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
 endif()

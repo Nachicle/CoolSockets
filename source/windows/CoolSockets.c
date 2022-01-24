@@ -246,7 +246,7 @@ CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFam
     int connectionResult = connect(client->socket, result->ai_addr, result->ai_addrlen);
     if(connectionResult == SOCKET_ERROR) {
         closesocket(client->socket);
-
+        return CS_RETURN_ERROR;
     }
 
     return CS_RETURN_OK;
@@ -290,6 +290,40 @@ void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback) {
         socket->dataReadyCallback = callback;
     }
 }
-void CS_ProcessEvents(CoolSocket socket) {
-
+void CS_ProcessSocketEvents(CoolSocket socket) {
+    if(socket.connectionCallback) {
+        WSAEVENT event = WSACreateEvent();
+        WSAEventSelect(socket.socket, event, FD_ACCEPT);
+        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
+            WSAResetEvent(event);
+            CoolSocket client;
+            CS_ServerAccept(socket, &client);
+            socket.connectionCallback(client);
+        }
+    }
+    if(socket.disconnectionCallback) {
+        WSAEVENT event = WSACreateEvent();
+        WSAEventSelect(socket.socket, event, FD_ACCEPT);
+        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
+            WSAResetEvent(event);
+            socket.disconnectionCallback(socket);
+            shutdown(socket.socket, SD_RECEIVE);
+            socket.socket = -1;            
+        }
+    }
+    if(socket.dataReadyCallback) {
+        WSAEVENT event = WSACreateEvent();
+        WSAEventSelect(socket.socket, event, FD_ACCEPT);
+        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
+            WSAResetEvent(event);
+            socket.dataReadyCallback(socket);
+        }
+    }
+}
+void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize) {
+    if(socketArray) {
+        for(int i = 0; i < arraySize; i++) {
+            CS_ProcessSocketEvents(socketArray[i]);
+        }
+    }
 }
