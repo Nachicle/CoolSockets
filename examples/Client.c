@@ -5,7 +5,7 @@
 int main(int argc, char const *argv[])
 {
     CoolSocket client;
-    CS_ClientConnect(&client, "fe80::a17f:274c:4579:967f", 13337, CS_FAMILY_IPv6, CS_TYPE_TCP);
+    CS_ClientConnect(&client, "127.0.0.1", 13337, CS_FAMILY_IPv4, CS_PROTOCOL_TCP);
     int counter = 0;
     char buffer[1024];
     while(1) {

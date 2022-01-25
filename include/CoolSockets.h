@@ -8,13 +8,19 @@ typedef enum {
 } CSFamily;
 
 typedef enum {
-    CS_TYPE_TCP,
-    CS_TYPE_UDP
-} CSType;
+    CS_PROTOCOL_TCP,
+    CS_PROTOCOL_UDP
+} CSProtocol;
 
 typedef enum {
-    CS_RETURN_OK = 1,
-    CS_RETURN_ERROR = 0
+    CS_TYPE_CLIENT,
+    CS_TYPE_SERVER
+} CSType; 
+
+typedef enum {
+    CS_RETURN_OK,
+    CS_RETURN_ERROR,
+    CS_RETURN_TIMEOUT
 } CSReturnCode;
 
 typedef CSReturnCode (*CSCallback)(CoolSocket);
@@ -25,7 +31,9 @@ typedef struct {
     char address[128];
     unsigned port;
     CSFamily family;
+    CSProtocol protocol;
     CSType type;
+    int blocking;
     // Callback functions
     CSCallback connectionCallback;
     CSCallback disconnectionCallback;
@@ -36,14 +44,14 @@ typedef struct {
 void CS_Version(void);
 
 // Server specific functions
-CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type);
+CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSProtocol protocol);
 CSReturnCode CS_ServerListen(CoolSocket server, int queueSize);
 CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client);
 CSReturnCode CS_ServerDisconnectClient(CoolSocket client);
 CSReturnCode CS_ServerStop(CoolSocket server);
 
 // Client specific functions
-CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type);
+CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSProtocol protocol);
 
 // Data transfer functions
 int CS_Send(CoolSocket socket, char* buffer, int nbytes);
@@ -55,5 +63,5 @@ CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
 void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);
 void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback);
 void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback);
-void CS_ProcessSocketEvents(CoolSocket socket);
+void CS_ProcessSocketEvents(CoolSocket* socket);
 void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize);

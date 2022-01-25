@@ -12,7 +12,7 @@ void toUpperCase(char* string) {
 }
 int main(int argc, char const *argv[]) {
     CoolSocket server;
-    if(CS_ServerStart(&server, "fe80::a17f:274c:4579:967f", 13337, CS_FAMILY_IPv6, CS_TYPE_TCP)) {
+    if(CS_ServerStart(&server, "0.0.0.0", 13337, CS_FAMILY_IPv4, CS_PROTOCOL_TCP)) {
         if(CS_ServerListen(server, 10)) {
             printf("Server started and listening! =D\nWaiting for client connection...\n");
             CoolSocket client;

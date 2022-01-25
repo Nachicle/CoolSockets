@@ -8,18 +8,18 @@
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
 // Private logging functions
-static void __cs_LogError(int wsaErrorCode) {
+static void __CS_LogError(int wsaErrorCode) {
     char buffer[1024];
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, wsaErrorCode, MAKELANGID(LANG_USER_DEFAULT, SUBLANG_DEFAULT), buffer, sizeof(buffer), NULL);
     printf("[%d] %s\n", wsaErrorCode, buffer);
 }
-#define __cs_LogErrorExtended(wsaErrorCode) {\
+#define __CS_LogErrorExtended(wsaErrorCode) {\
     printf("\nFollowing error ocurred at %s[%d] during %s call:\n", __FILENAME__, __LINE__, __FUNCTION__);\
-    __cs_LogError(wsaErrorCode);\
+    __CS_LogError(wsaErrorCode);\
 } 
 
 // Private address info functions
-static int __cs_GetFamily(CSFamily family) {
+static int __CS_GetFamily(CSFamily family) {
     int result = -1;
     switch(family) {
         case CS_FAMILY_IPv4:
@@ -31,25 +31,25 @@ static int __cs_GetFamily(CSFamily family) {
     }
     return result;
 }
-static int __cs_GetType(CSType type) {
+static int __CS_GetSockType(CSProtocol protocol) {
     int result = -1;
-    switch(type) {
-        case CS_TYPE_TCP:
+    switch(protocol) {
+        case CS_PROTOCOL_TCP:
             result = SOCK_STREAM;
             break;
-        case CS_TYPE_UDP:
+        case CS_PROTOCOL_UDP:
             result = SOCK_DGRAM;
             break;
     }
     return result;
 }
-static int __cs_GetProtocol(CSType type) {
+static int __CS_GetProtocol(CSProtocol protocol) {
     int result = -1;
-        switch(type) {
-        case CS_TYPE_TCP:
+        switch(protocol) {
+        case CS_PROTOCOL_TCP:
             result = IPPROTO_TCP;
             break;
-        case CS_TYPE_UDP:
+        case CS_PROTOCOL_UDP:
             result = IPPROTO_UDP;
             break;
     }
@@ -63,7 +63,7 @@ static CSReturnCode __cs_WSAStartup(void) {
         WSADATA wsaData = {0};
         int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
         if(wsaResult != 0) {
-            __cs_LogErrorExtended(wsaResult);
+            __CS_LogErrorExtended(wsaResult);
             return CS_RETURN_ERROR;
         } 
         wsaInit = TRUE;
@@ -77,28 +77,29 @@ void CS_Version(void) {
 }
 
 // Server specific functions
-CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSType type) {
+CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamily family, CSProtocol protocol) {
     
     // Initializing socket data
     memset(server, 0, sizeof(CoolSocket));
+    server->type = CS_TYPE_SERVER;
+    server->blocking = TRUE;
 
     // Filling server data
     strcpy_s(server->address, sizeof(server->address), address);
     server->port = port;
     server->family = family;
-    server->type = type;
+    server->protocol = protocol;
 
     // Starting Windows Sockets API
-    if(!__cs_WSAStartup()) {
+    if(__cs_WSAStartup() == CS_RETURN_ERROR) {
         return CS_RETURN_ERROR;
     }
-    
     // Getting address
     struct addrinfo *result = NULL, hints;
     ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = __cs_GetFamily(server->family);
-    hints.ai_socktype = __cs_GetType(server->type);
-    hints.ai_protocol = __cs_GetProtocol(server->type);
+    hints.ai_family = __CS_GetFamily(server->family);
+    hints.ai_socktype = __CS_GetSockType(server->protocol);
+    hints.ai_protocol = __CS_GetProtocol(server->protocol);
     hints.ai_flags = AI_PASSIVE;
 
     char portString[16];
@@ -106,7 +107,7 @@ CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamil
 
     int addrInfoResult = getaddrinfo(server->address, portString, &hints, &result);
     if (addrInfoResult != 0) {
-        __cs_LogErrorExtended(addrInfoResult);
+        __CS_LogErrorExtended(addrInfoResult);
         WSACleanup();
         return CS_RETURN_ERROR;
     }
@@ -114,7 +115,7 @@ CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamil
     // Creating socket
     server->socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (server->socket == INVALID_SOCKET) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        __CS_LogErrorExtended(WSAGetLastError());
         freeaddrinfo(result);
         WSACleanup();
         return CS_RETURN_ERROR;
@@ -123,7 +124,7 @@ CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamil
     // Binding socket
     int bindingResult = bind(server->socket, result->ai_addr, (int)result->ai_addrlen);
     if (bindingResult == SOCKET_ERROR) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        __CS_LogErrorExtended(WSAGetLastError());
         closesocket(server->socket);
         freeaddrinfo(result);
         WSACleanup();
@@ -135,7 +136,7 @@ CSReturnCode CS_ServerStart(CoolSocket* server, char* address, int port, CSFamil
 }
 CSReturnCode CS_ServerListen(CoolSocket server, int queueSize) {
     if(listen(server.socket, queueSize) == SOCKET_ERROR) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        __CS_LogErrorExtended(WSAGetLastError());
         closesocket(server.socket);
         WSACleanup();
         return CS_RETURN_ERROR;
@@ -146,9 +147,11 @@ CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client) {
 
     // Initializing socket data
     memset(client, 0, sizeof(CoolSocket));
+    client->type = CS_TYPE_CLIENT;
+    client->blocking = TRUE;
 
     client->family = server.family;
-    client->type = server.type;
+    client->protocol = server.protocol;
 
     int clientAddrLen;
     switch(client->family) {
@@ -164,11 +167,15 @@ CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client) {
     client->socket = accept(server.socket, clientAddr, &clientAddrLen);
 
     if (client->socket == INVALID_SOCKET) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        if (WSAGetLastError() == WSAEWOULDBLOCK) {
+            return CS_RETURN_TIMEOUT;
+        }
+        __CS_LogErrorExtended(WSAGetLastError());
         closesocket(server.socket);
         WSACleanup();
         return CS_RETURN_ERROR;
     }
+
 
     switch(client->family) {
         case CS_FAMILY_IPv4:
@@ -188,12 +195,12 @@ CSReturnCode CS_ServerAccept(CoolSocket server, CoolSocket* client) {
 CSReturnCode CS_ServerDisconnectClient(CoolSocket client) {
     int disconnectionResult = shutdown(client.socket, SD_SEND);
     if(disconnectionResult == SOCKET_ERROR) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        __CS_LogErrorExtended(WSAGetLastError());
         return CS_RETURN_ERROR;
     }    
     int closeResult = closesocket(client.socket);
     if(!closeResult) {
-        __cs_LogErrorExtended(closeResult);
+        __CS_LogErrorExtended(closeResult);
         return CS_RETURN_ERROR;
     }
     return CS_RETURN_OK;
@@ -201,40 +208,42 @@ CSReturnCode CS_ServerDisconnectClient(CoolSocket client) {
 CSReturnCode CS_ServerStop(CoolSocket server) {
     int closeResult = closesocket(server.socket);
     if(!closeResult) {
-        __cs_LogErrorExtended(closeResult);
+        __CS_LogErrorExtended(closeResult);
         return CS_RETURN_ERROR;
     }
     return CS_RETURN_OK;
 }
 
 // Client specific functions
-CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSType type) {
+CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSProtocol protocol) {
     
     // Initializing socket data
     memset(client, 0, sizeof(CoolSocket));
+    client->type = CS_TYPE_CLIENT;
+    client->blocking = TRUE;
 
     // Filling client data
     client->family = family;
-    client->type = type;
+    client->protocol = protocol;
 
     // Starting Windows Sockets API
-    if(!__cs_WSAStartup()) {
+    if(__cs_WSAStartup() == CS_RETURN_ERROR) {
         return CS_RETURN_ERROR;
     }
 
     // Getting address
     struct addrinfo *result = NULL, hints;
     ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = __cs_GetFamily(client->family);
-    hints.ai_socktype = __cs_GetType(client->type);
-    hints.ai_protocol = __cs_GetProtocol(client->type);
+    hints.ai_family = __CS_GetFamily(client->family);
+    hints.ai_socktype = __CS_GetSockType(client->protocol);
+    hints.ai_protocol = __CS_GetProtocol(client->protocol);
 
     char portString[16];
     sprintf_s(portString, sizeof(portString), "%d", port);
 
     int addrInfoResult = getaddrinfo(address, portString, &hints, &result);
     if (addrInfoResult != 0) {
-        __cs_LogErrorExtended(addrInfoResult);
+        __CS_LogErrorExtended(addrInfoResult);
         WSACleanup();
         return CS_RETURN_ERROR;
     }
@@ -242,7 +251,7 @@ CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFam
     // Creating socket
     client->socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (client->socket == INVALID_SOCKET) {
-        __cs_LogErrorExtended(WSAGetLastError());
+        __CS_LogErrorExtended(WSAGetLastError());
         freeaddrinfo(result);
         WSACleanup();
         return CS_RETURN_ERROR;
@@ -296,40 +305,47 @@ void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback) {
         socket->dataReadyCallback = callback;
     }
 }
-void CS_ProcessSocketEvents(CoolSocket socket) {
-    if(socket.connectionCallback) {
-        WSAEVENT event = WSACreateEvent();
-        WSAEventSelect(socket.socket, event, FD_ACCEPT);
-        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
-            WSAResetEvent(event);
-            CoolSocket client;
-            CS_ServerAccept(socket, &client);
-            socket.connectionCallback(client);
+void CS_ProcessSocketEvents(CoolSocket* socket) {
+    
+    // Checking if socket is valid
+    if(socket->socket < 0) {
+        return;
+    }
+    
+    // Unblocking socket
+    if(socket->blocking) {
+        int mode = 1;
+        int result = ioctlsocket(socket->socket, FIONBIO, &mode);
+        socket->blocking = FALSE;
+    }
+
+    // Checking for connections
+    if(socket->connectionCallback) {
+        CoolSocket client;
+        if(CS_ServerAccept(*socket, &client) == CS_RETURN_OK) {
+            socket->connectionCallback(client);
         }
     }
-    if(socket.disconnectionCallback) {
-        WSAEVENT event = WSACreateEvent();
-        WSAEventSelect(socket.socket, event, FD_ACCEPT);
-        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
-            WSAResetEvent(event);
-            socket.disconnectionCallback(socket);
-            shutdown(socket.socket, SD_RECEIVE);
-            socket.socket = -1;            
+    
+    // Checking for disconnections and data ready
+    if(socket->dataReadyCallback || socket->disconnectionCallback) {
+        char aux_buffer[1];
+        if(recv(socket->socket, aux_buffer, 1, MSG_PEEK) == SOCKET_ERROR) {
+            if(WSAGetLastError() != WSAEWOULDBLOCK) {
+                socket->disconnectionCallback(socket);
+                closesocket(socket->socket);
+                socket->socket = -1;
+            }
+        } else {
+            socket->dataReadyCallback(socket);
         }
     }
-    if(socket.dataReadyCallback) {
-        WSAEVENT event = WSACreateEvent();
-        WSAEventSelect(socket.socket, event, FD_ACCEPT);
-        if(WSAWaitForMultipleEvents(1, &event, FALSE, 0, FALSE) == WSA_WAIT_EVENT_0) {
-            WSAResetEvent(event);
-            socket.dataReadyCallback(socket);
-        }
-    }
+   
 }
 void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize) {
     if(socketArray) {
         for(int i = 0; i < arraySize; i++) {
-            CS_ProcessSocketEvents(socketArray[i]);
+            CS_ProcessSocketEvents(&socketArray[i]);
         }
     }
 }
