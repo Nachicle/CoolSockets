@@ -38,10 +38,13 @@ typedef struct {
     CSProtocol protocol;
     CSType type;
     int blocking;
-    // Callback functions
+    // Callback fields
     CSCallback connectionCallback;
+    void* connectionCallbackData;
     CSCallback disconnectionCallback;
+    void* disconnectionCallbackData;
     CSCallback dataReadyCallback;
+    void* dataReadyCallbackData;
 } CoolSocket;
 
 // Library version function
@@ -64,9 +67,9 @@ int CS_Receive(CoolSocket socket, void* buffer, int nbytes);
 CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes);
 
 // Callback managing functions
-void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);
-void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback);
-void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback);
+void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
+void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
+void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
 void CS_ProcessSocketEvents(CoolSocket* socket);
 void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize);
 

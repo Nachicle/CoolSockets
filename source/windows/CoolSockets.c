@@ -291,20 +291,17 @@ CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes) {
 }
 
 // Callback managing functions
-void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback) {
-    if(callback) {
-        socket->connectionCallback = callback;
-    }
+void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData) {
+    socket->connectionCallback = callback;
+    socket->connectionCallbackData = callbackData;
 }
-void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback) {
-    if(callback) {
-        socket->disconnectionCallback = callback;
-    }
+void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData) {
+    socket->disconnectionCallback = callback;
+    socket->disconnectionCallbackData = callbackData;
 }
-void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback) {
-    if(callback) {
-        socket->dataReadyCallback = callback;
-    }
+void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback, void* callbackData) {
+    socket->dataReadyCallback = callback;
+    socket->dataReadyCallbackData = callbackData;
 }
 void CS_ProcessSocketEvents(CoolSocket* socket) {
     
