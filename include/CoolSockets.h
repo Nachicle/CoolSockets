@@ -27,9 +27,7 @@ typedef enum {
     CS_RETURN_TIMEOUT
 } CSReturnCode;
 
-typedef CSReturnCode (*CSCallback)(CoolSocket);
-
-typedef struct {
+typedef struct CoolSocket {
     // Socket info
     long long socket;
     char address[128];
@@ -39,13 +37,15 @@ typedef struct {
     CSType type;
     int blocking;
     // Callback fields
-    CSCallback connectionCallback;
+    CSReturnCode (*connectionCallback)(struct CoolSocket, void*);
     void* connectionCallbackData;
-    CSCallback disconnectionCallback;
+    CSReturnCode (*disconnectionCallback)(struct CoolSocket, void*);
     void* disconnectionCallbackData;
-    CSCallback dataReadyCallback;
+    CSReturnCode (*dataReadyCallback)(struct CoolSocket, void*);
     void* dataReadyCallbackData;
 } CoolSocket;
+
+typedef CSReturnCode (*CSCallback)(CoolSocket, void*);
 
 // Library version function
 void CS_Version(void);

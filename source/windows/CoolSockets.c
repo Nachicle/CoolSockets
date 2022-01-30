@@ -292,8 +292,10 @@ CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes) {
 
 // Callback managing functions
 void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData) {
-    socket->connectionCallback = callback;
-    socket->connectionCallbackData = callbackData;
+    if(socket->type == CS_TYPE_SERVER) {
+        socket->connectionCallback = callback;
+        socket->connectionCallbackData = callbackData;
+    }
 }
 void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData) {
     socket->disconnectionCallback = callback;
@@ -321,7 +323,7 @@ void CS_ProcessSocketEvents(CoolSocket* socket) {
     if(socket->connectionCallback) {
         CoolSocket client;
         if(CS_ServerAccept(*socket, &client) == CS_RETURN_OK) {
-            socket->connectionCallback(client);
+            socket->connectionCallback(client, socket->connectionCallbackData);
         }
     }
     
@@ -330,12 +332,12 @@ void CS_ProcessSocketEvents(CoolSocket* socket) {
         char aux_buffer[1];
         if(recv(socket->socket, aux_buffer, 1, MSG_PEEK) == SOCKET_ERROR) {
             if(WSAGetLastError() != WSAEWOULDBLOCK) {
-                socket->disconnectionCallback(socket);
+                socket->disconnectionCallback(*socket, socket->disconnectionCallbackData);
                 closesocket(socket->socket);
                 socket->socket = -1;
             }
         } else {
-            socket->dataReadyCallback(socket);
+            socket->dataReadyCallback(*socket, socket->dataReadyCallback);
         }
     }
    
