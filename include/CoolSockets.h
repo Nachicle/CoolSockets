@@ -58,10 +58,10 @@ CSReturnCode CS_ServerStop(CoolSocket server);
 CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSProtocol protocol);
 
 // Data transfer functions
-int CS_Send(CoolSocket socket, char* buffer, int nbytes);
-CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes);
-int CS_Receive(CoolSocket socket, char* buffer, int nbytes);
-CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
+int CS_Send(CoolSocket socket, void* buffer, int nbytes);
+CSReturnCode CS_SendAll(CoolSocket socket, void* buffer, int nbytes);
+int CS_Receive(CoolSocket socket, void* buffer, int nbytes);
+CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes);
 
 // Callback managing functions
 void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);

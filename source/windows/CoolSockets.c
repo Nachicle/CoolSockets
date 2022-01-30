@@ -1,9 +1,10 @@
 #include <CoolSockets.h>
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
@@ -268,23 +269,23 @@ CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFam
 }
 
 // Data transfer functions
-int CS_Send(CoolSocket socket, char* buffer, int nbytes) {
-    return send(socket.socket, buffer, nbytes, 0);
+int CS_Send(CoolSocket socket, void* buffer, int nbytes) {
+    return send(socket.socket, (char*)buffer, nbytes, 0);
 }
-CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes) {
+CSReturnCode CS_SendAll(CoolSocket socket, void* buffer, int nbytes) {
     int written = 0;
     do {
-        written += CS_Send(socket, buffer+written, nbytes-written);
+        written += CS_Send(socket, (char*)buffer+written, nbytes-written);
     } while(written<nbytes);
     return CS_RETURN_OK;
 }
-int CS_Receive(CoolSocket socket, char* buffer, int nbytes) {
-    return recv(socket.socket, buffer, nbytes, 0);
+int CS_Receive(CoolSocket socket, void* buffer, int nbytes) {
+    return recv(socket.socket, (char*)buffer, nbytes, 0);
 }
-CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes) {
+CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes) {
     int read = 0;
     do {
-        read += CS_Receive(socket, buffer+read, nbytes-read);
+        read += CS_Receive(socket, (char*)buffer+read, nbytes-read);
     } while(read<nbytes);
     return CS_RETURN_OK;
 }
