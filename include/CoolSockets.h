@@ -27,9 +27,7 @@ typedef enum {
     CS_RETURN_TIMEOUT
 } CSReturnCode;
 
-typedef CSReturnCode (*CSCallback)(CoolSocket);
-
-typedef struct {
+typedef struct CoolSocket {
     // Socket info
     long long socket;
     char address[128];
@@ -38,11 +36,16 @@ typedef struct {
     CSProtocol protocol;
     CSType type;
     int blocking;
-    // Callback functions
-    CSCallback connectionCallback;
-    CSCallback disconnectionCallback;
-    CSCallback dataReadyCallback;
+    // Callback fields
+    CSReturnCode (*connectionCallback)(struct CoolSocket, void*);
+    void* connectionCallbackData;
+    CSReturnCode (*disconnectionCallback)(struct CoolSocket, void*);
+    void* disconnectionCallbackData;
+    CSReturnCode (*dataReadyCallback)(struct CoolSocket, void*);
+    void* dataReadyCallbackData;
 } CoolSocket;
+
+typedef CSReturnCode (*CSCallback)(CoolSocket, void*);
 
 // Library version function
 void CS_Version(void);
@@ -58,15 +61,15 @@ CSReturnCode CS_ServerStop(CoolSocket server);
 CSReturnCode CS_ClientConnect(CoolSocket* client, char* address, int port, CSFamily family, CSProtocol protocol);
 
 // Data transfer functions
-int CS_Send(CoolSocket socket, char* buffer, int nbytes);
-CSReturnCode CS_SendAll(CoolSocket socket, char* buffer, int nbytes);
-int CS_Receive(CoolSocket socket, char* buffer, int nbytes);
-CSReturnCode cs_ReadAll(CoolSocket socket, char* buffer, int nbytes);
+int CS_Send(CoolSocket socket, void* buffer, int nbytes);
+CSReturnCode CS_SendAll(CoolSocket socket, void* buffer, int nbytes);
+int CS_Receive(CoolSocket socket, void* buffer, int nbytes);
+CSReturnCode cs_ReadAll(CoolSocket socket, void* buffer, int nbytes);
 
 // Callback managing functions
-void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback);
-void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback);
-void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback);
+void CS_SetConnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
+void CS_SetDisconnectionCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
+void CS_SetDataReadyCallback(CoolSocket* socket, CSCallback callback, void* callbackData);
 void CS_ProcessSocketEvents(CoolSocket* socket);
 void CS_ProcessSocketArrayEvents(CoolSocket* socketArray, int arraySize);
 
