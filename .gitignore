@@ -88,3 +88,5 @@ _deps
 .history
 .ionide
 .vscode/
+
+.DS_Store
